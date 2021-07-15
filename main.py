@@ -26,34 +26,26 @@ def detect_face(image, exec_net, input_blob, out_blob):
     INPUT_HEIGHT, INPUT_WIDTH = 384, 672
 
     input = cv2.resize(image, (INPUT_WIDTH, INPUT_HEIGHT))
-    image = cv2.resize(image, (INPUT_WIDTH, INPUT_HEIGHT))
-    res = input
+    image = res = cv2.resize(image, (INPUT_WIDTH, INPUT_HEIGHT))   
     input = input.transpose(2, 0, 1)
 
     output = exec_net.infer(inputs={input_blob : input})
 
-    
     output = output[out_blob]
     output = np.squeeze(output)
 
     threshold = 0.5
-    color = (0, 255, 0)
-    line_width = 2
-
     flag = 0
+
     for detection in output:
-        #log.info(detection)
-        if detection[2] > threshold:
-            point1, point2 = (int(detection[3]*INPUT_WIDTH), int(detection[4]*INPUT_HEIGHT)), (int(detection[5]*INPUT_WIDTH), int(detection[6]*INPUT_HEIGHT))
+        confidence = detection[2]        
+        if  confidence > threshold:
             xmin, ymin, xmax, ymax = int(detection[3]*INPUT_WIDTH), int(detection[4]*INPUT_HEIGHT), int(detection[5]*INPUT_WIDTH), int(detection[6]*INPUT_HEIGHT)         
-            #cv2.rectangle(image, point1, point2, color, line_width)
             res = res[ymin:ymax, xmin:xmax]
-            #cv2.imwrite('images/{}.jpg'.format(flag), res) 
+
         if flag > 5:
             break
     
-    res = cv2.resize(res, (256, 256))
-
     return res, image
 
 
