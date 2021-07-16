@@ -7,6 +7,8 @@ from openvino.inference_engine import IECore
 
 from time import perf_counter
 
+INPUT_HEIGHT, INPUT_WIDTH = 384, 672
+
 def build_argparser():
     parser = argparse.ArgumentParser()
     parser.add_argument('-m', '--model', help='Path to an .xml file with a trained model.    ', required=False, type=str, dest='model_xml')
@@ -23,10 +25,12 @@ def prepare_input():
 
 
 def detect_face(image, exec_net, input_blob, out_blob):
-    INPUT_HEIGHT, INPUT_WIDTH = 384, 672
+    
 
-    input = cv2.resize(image, (INPUT_WIDTH, INPUT_HEIGHT))
-    image = res = cv2.resize(image, (INPUT_WIDTH, INPUT_HEIGHT))   
+    image = cv2.resize(image, (INPUT_WIDTH, INPUT_HEIGHT))
+    input = image.copy()    
+    res = image.copy()
+
     input = input.transpose(2, 0, 1)
 
     output = exec_net.infer(inputs={input_blob : input})
@@ -41,23 +45,71 @@ def detect_face(image, exec_net, input_blob, out_blob):
         confidence = detection[2]        
         if  confidence > threshold:
             xmin, ymin, xmax, ymax = int(detection[3]*INPUT_WIDTH), int(detection[4]*INPUT_HEIGHT), int(detection[5]*INPUT_WIDTH), int(detection[6]*INPUT_HEIGHT)         
-            res = res[ymin:ymax, xmin:xmax]
+            res = res[ymin:ymax+1, xmin:xmax+1]
 
         if flag > 5:
             break
     
     return res, image
 
+def display_score():
+    pass
 
-def recognize_smile(image, exec_net, input_blob, out_blob, frame):
+def count_fps():
+    pass
+
+
+    emotions = ['neutral', 'happy', 'sad', 'surprise', 'anger']
+
+class Score:
+    def __init__(self):
+        self.scorings = {'neutral' : 0, 'happy' : 0, 'sad' : 0, 'surprise' : 0, 'anger' : 0}
+
+    def increase_score(self, key):
+        self.scorings[key] += 1
+
+    def display_score_badge(self, frame):
+        BADGE_LENGTH, BADGE_HEIGHT = 300, 200
+        line_width = 1
+        point1, point2 = (0, INPUT_HEIGHT-1), (BADGE_LENGTH, INPUT_HEIGHT-BADGE_HEIGHT)
+        cv2.rectangle(frame, point1, point2, color2, line_width)
+
+        for key in self.scorings.keys():
+            pass
+
+
+
+
+
+def recognize_smile(image, exec_net, input_blob, out_blob, frame, score=0):
     input = cv2.resize(image, (64, 64))
     input = input.transpose(2, 0, 1)
     result = frame
-
+    
     output = exec_net.infer(inputs={input_blob : input})
+
+    emotions = ['neutral', 'happy', 'sad', 'surprise', 'anger']
+    #point1, point2 = (int(detection.xmin), int(detection.ymax)), (int(detection.xmax), int(detection.ymin))
+    point1, point2 = (0, INPUT_HEIGHT-1), (400, INPUT_HEIGHT-50)
+    color = (0, 0, 255)
+    line_width = 1
+    thickness = -1
+    color2 = (0,255, 0)
+    point3, point4 = (1, INPUT_HEIGHT-2), (score, INPUT_HEIGHT-49)
+    cv2.rectangle(frame, point1, point2, color, line_width)
+    cv2.rectangle(frame, point3, point4, color2, thickness)
+
+
     if np.argmax(output[out_blob]) == 1:
         cv2.putText(result, "Smile!", (100, 100), cv2.FONT_HERSHEY_SIMPLEX, 1, (0, 0, 255))
-    return image
+        if score < 399:
+            score += 1
+        thickness = -1
+        color = (0,255, 0)
+        point1, point2 = (1, INPUT_HEIGHT-2), (score, INPUT_HEIGHT-49)
+        cv2.rectangle(frame, point1, point2, color, thickness)
+    
+    return image, score
 
 
 # def draw_detections(frame, detections, labels, threshold):
@@ -86,8 +138,9 @@ def main():
     args = build_argparser().parse_args()
 
     cap = cv2.VideoCapture(0)
+
     ie = IECore()
-    net = ie.read_network(model="face-detection-adas-0001/FP16/face-detection-adas-0001.xml")
+    net = ie.read_network(model="face-detection-adas-0001/FP16-INT8/face-detection-adas-0001.xml")
     exec_net = ie.load_network(network=net, device_name="CPU")
     out_blob = next(iter(net.outputs))
     input_blob = next(iter(net.inputs))
@@ -96,16 +149,19 @@ def main():
     exec_net2 = ie.load_network(network=net2, device_name="CPU")
     out_blob2 = next(iter(net2.outputs))
     input_blob2 = next(iter(net2.inputs))
-
+    score = 0
     while True:
         start_time = perf_counter()
 
         ret, frame = cap.read()
-        face, frame = detect_face(frame, exec_net, input_blob, out_blob)
-        face = recognize_smile(face, exec_net2, input_blob2, out_blob2, frame)
 
+        try:
+            face, frame = detect_face(frame, exec_net, input_blob, out_blob)
+            face , score = recognize_smile(face, exec_net2, input_blob2, out_blob2, frame, score)
+        except:
+            pass 
         end_time = perf_counter()
-        log.info("1 frame consuming {} sec".format(end_time - start_time))
+        log.info("score is  {} sec".format(score))
 
 
         cv2.imshow('frame', frame)
