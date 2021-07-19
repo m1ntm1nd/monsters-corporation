@@ -39,10 +39,10 @@ def detect_face(image, exec_net, input_blob, out_blob):
     return res, image
 
 
-def recognize_smile(image, exec_net, input_blob, out_blob, frame):
+def recognize_smile(image, exec_net, input_blob, out_blob):
     input = cv2.resize(image, (64, 64))
     input = input.transpose(2, 0, 1)
-    result = frame
+    
     
     output = exec_net.infer(inputs={input_blob : input})
 
@@ -52,7 +52,7 @@ def recognize_smile(image, exec_net, input_blob, out_blob, frame):
     if np.argmax(output[out_blob]) == 1:
         flag = 1
 
-    return image, flag
+    return flag
 
 
 class Score:
@@ -60,36 +60,45 @@ class Score:
         self.happy = 0
         self.neutral = 0
     
-    def _display_score(self, frame, BAR_HEIGHT = INPUT_HEIGHT):
+    def _display_score(self, frame):
         BAR_WIDTH = 30
         PADDING = 1
-        w, h = INPUT_WIDTH+2*BAR_WIDTH, INPUT_HEIGHT
-        #frm = np.zeros((h, w, 3))
         line_width = -1
         color = (0, 0, 255)
         color2 = (0, 255, 0)
-        point1, point2 = (INPUT_WIDTH-BAR_WIDTH, 0), (INPUT_WIDTH-PADDING, INPUT_HEIGHT-PADDING)
-        point3, point4 = (INPUT_WIDTH-2*BAR_WIDTH, 0), (INPUT_WIDTH-PADDING-BAR_WIDTH, INPUT_HEIGHT-PADDING)
-        frm = frame
-        cv2.rectangle(frm, point1, point2, color, line_width)
-        cv2.rectangle(frm, point3, point4, color2, line_width)
-        return frm
+        point1, point2 = (INPUT_WIDTH-BAR_WIDTH, (INPUT_HEIGHT-self.neutral)), (INPUT_WIDTH-PADDING, INPUT_HEIGHT)
+        point3, point4 = (INPUT_WIDTH-2*BAR_WIDTH, (INPUT_HEIGHT-self.happy)), (INPUT_WIDTH-PADDING-BAR_WIDTH, INPUT_HEIGHT)
+        
+        cv2.rectangle(frame, point1, point2, color, line_width)
+        cv2.rectangle(frame, point3, point4, color2, line_width)
+
+        return frame
 
     def update_score(self, flag, frame):
         if flag:
-            self.happy += 10
-            self.neutral -= 2
+            self.happy += 2
+            self.neutral -= 1
             log.warn("Happiness score is {}".format(self.happy))
             log.warn("Neutral score is {}".format(self.neutral))
         else:
 
-            self.neutral += 5
+            self.neutral += 1
             self.happy -= 1
             log.warn("Happiness score is {}".format(self.happy))
             log.warn("Neutral score is {}".format(self.neutral))
-    
-    
 
+        self._check_score()
+        return self._display_score(frame)
+
+    def _check_score(self):
+        if self.happy < 0:
+            self.happy = 0    
+        if self.neutral < 0:
+            self.neutral = 0
+        if self.happy > INPUT_HEIGHT:
+            self.happy = INPUT_HEIGHT
+        if self.neutral > INPUT_HEIGHT:
+            self.neutral = INPUT_HEIGHT
 
 def main():
     log.basicConfig(format="[ %(levelname)s ] %(message)s",
@@ -119,16 +128,14 @@ def main():
         start_time = perf_counter()
         try:
             face, frame = detect_face(frame, exec_net, input_blob, out_blob)
-            face , flag = recognize_smile(face, exec_net2, input_blob2, out_blob2, frame)
-            score.update_score(flag)
-            frame = score.display_score(frame)
+            flag = recognize_smile(face, exec_net2, input_blob2, out_blob2)
 
+            frame = score.update_score(flag, frame)
         except:
             pass
 
         end_time = perf_counter()
         FPS_VALUE = int(1/(end_time-start_time))
-        cv2.putText(frame, str(FPS_VALUE) + ' FPS', (0,10), cv2.FONT_HERSHEY_SIMPLEX, 0.55, (0, 255, 0), 2)
         #log.info("score is  {} sec".format(score))
 
 
