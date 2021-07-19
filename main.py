@@ -139,7 +139,7 @@ def main():
         #log.info("score is  {} sec".format(score))
 
 
-        cv2.imshow('frame', frame)
+        cv2.imshow('OH THAT IS GAME', frame)
         if cv2.waitKey(1) & 0xFF == ord('q'):
             break
 
