@@ -9,20 +9,6 @@ from time import perf_counter
 
 INPUT_HEIGHT, INPUT_WIDTH = 384, 672
 
-def build_argparser():
-    parser = argparse.ArgumentParser()
-    parser.add_argument('-m', '--model', help='Path to an .xml file with a trained model.    ', required=False, type=str, dest='model_xml')
-    parser.add_argument('-w', '--weights', help='Path to an .bin file with a trained weights.', required=False, type=str, dest='model_bin')
-    parser.add_argument('-i', '--input', help='Data for input                                ', required=False, type=str, nargs='+', dest='input')
-    parser.add_argument('-l', '--extension', help='Path to MKLDNN (CPU, MYRIAD) custom layers', type=str, default=None, dest='extension')    
-    parser.add_argument('--default_device', help='Default device for heterogeneous inference', 
-                        choices=['CPU', 'GPU', 'MYRIAD', 'FGPA'], default=None, type=str, dest='default_device')
-    parser.add_argument('--labels', help='Labels mapping file', default=None, type=str, dest='labels')  
-    return parser
-
-def prepare_input():
-    pass
-
 
 def detect_face(image, exec_net, input_blob, out_blob):
     
@@ -52,94 +38,68 @@ def detect_face(image, exec_net, input_blob, out_blob):
     
     return res, image
 
-def display_score():
-    pass
 
-def count_fps():
-    pass
-
-
-    emotions = ['neutral', 'happy', 'sad', 'surprise', 'anger']
-
-class Score:
-    def __init__(self):
-        self.scorings = {'neutral' : 0, 'happy' : 0, 'sad' : 0, 'surprise' : 0, 'anger' : 0}
-
-    def increase_score(self, key):
-        self.scorings[key] += 1
-
-    def display_score_badge(self, frame):
-        BADGE_LENGTH, BADGE_HEIGHT = 300, 200
-        line_width = 1
-        point1, point2 = (0, INPUT_HEIGHT-1), (BADGE_LENGTH, INPUT_HEIGHT-BADGE_HEIGHT)
-        cv2.rectangle(frame, point1, point2, color2, line_width)
-
-        for key in self.scorings.keys():
-            pass
-
-
-
-
-
-def recognize_smile(image, exec_net, input_blob, out_blob, frame, score=0):
+def recognize_smile(image, exec_net, input_blob, out_blob, frame):
     input = cv2.resize(image, (64, 64))
     input = input.transpose(2, 0, 1)
     result = frame
     
     output = exec_net.infer(inputs={input_blob : input})
 
-    emotions = ['neutral', 'happy', 'sad', 'surprise', 'anger']
-    #point1, point2 = (int(detection.xmin), int(detection.ymax)), (int(detection.xmax), int(detection.ymin))
-    point1, point2 = (0, INPUT_HEIGHT-1), (400, INPUT_HEIGHT-50)
-    color = (0, 0, 255)
-    line_width = 1
-    thickness = -1
-    color2 = (0,255, 0)
-    point3, point4 = (1, INPUT_HEIGHT-2), (score, INPUT_HEIGHT-49)
-    cv2.rectangle(frame, point1, point2, color, line_width)
-    cv2.rectangle(frame, point3, point4, color2, thickness)
-
+    #emotions = ['neutral', 'happy', 'sad', 'surprise', 'anger']
+    flag = 0
 
     if np.argmax(output[out_blob]) == 1:
-        cv2.putText(result, "Smile!", (100, 100), cv2.FONT_HERSHEY_SIMPLEX, 1, (0, 0, 255))
-        if score < 399:
-            score += 1
-        thickness = -1
-        color = (0,255, 0)
-        point1, point2 = (1, INPUT_HEIGHT-2), (score, INPUT_HEIGHT-49)
-        cv2.rectangle(frame, point1, point2, color, thickness)
+        flag = 1
+
+    return image, flag
+
+
+class Score:
+    def __init__(self):
+        self.happy = 0
+        self.neutral = 0
     
-    return image, score
+    def _display_score(self, frame, BAR_HEIGHT = INPUT_HEIGHT):
+        BAR_WIDTH = 30
+        PADDING = 1
+        w, h = INPUT_WIDTH+2*BAR_WIDTH, INPUT_HEIGHT
+        #frm = np.zeros((h, w, 3))
+        line_width = -1
+        color = (0, 0, 255)
+        color2 = (0, 255, 0)
+        point1, point2 = (INPUT_WIDTH-BAR_WIDTH, 0), (INPUT_WIDTH-PADDING, INPUT_HEIGHT-PADDING)
+        point3, point4 = (INPUT_WIDTH-2*BAR_WIDTH, 0), (INPUT_WIDTH-PADDING-BAR_WIDTH, INPUT_HEIGHT-PADDING)
+        frm = frame
+        cv2.rectangle(frm, point1, point2, color, line_width)
+        cv2.rectangle(frm, point3, point4, color2, line_width)
+        return frm
 
+    def update_score(self, flag, frame):
+        if flag:
+            self.happy += 10
+            self.neutral -= 2
+            log.warn("Happiness score is {}".format(self.happy))
+            log.warn("Neutral score is {}".format(self.neutral))
+        else:
 
-# def draw_detections(frame, detections, labels, threshold):
+            self.neutral += 5
+            self.happy -= 1
+            log.warn("Happiness score is {}".format(self.happy))
+            log.warn("Neutral score is {}".format(self.neutral))
+    
+    
 
-#     size = frame.shape[:2]
-#     for detection in detections:
-#         score = detection.score
-        
-#         # If score more than threshold, draw rectangle on the frame
-#         if score >= threshold:
-#             point1, point2 = (int(detection.xmin), int(detection.ymax)), (int(detection.xmax), int(detection.ymin))
-#             color = (0, 255, 0)
-#             line_width = 2
-#             cv2.rectangle(frame, point1, point2, color, line_width)
-            
-#             id = detection.id
-#             text_size = 1
-#             text = labels[detection.id + 1]
-#             cv2.putText(frame, text, (int(detection.xmin), int(detection.ymin)), cv2.FONT_HERSHEY_COMPLEX, text_size, color)
-        
-#     return frame
 
 def main():
     log.basicConfig(format="[ %(levelname)s ] %(message)s",
         level=log.INFO, stream=sys.stdout)
-    args = build_argparser().parse_args()
-
+    
     cap = cv2.VideoCapture(0)
 
     ie = IECore()
+
+    
     net = ie.read_network(model="face-detection-adas-0001/FP16-INT8/face-detection-adas-0001.xml")
     exec_net = ie.load_network(network=net, device_name="CPU")
     out_blob = next(iter(net.outputs))
@@ -149,19 +109,27 @@ def main():
     exec_net2 = ie.load_network(network=net2, device_name="CPU")
     out_blob2 = next(iter(net2.outputs))
     input_blob2 = next(iter(net2.inputs))
-    score = 0
+
+    score = Score()
+
     while True:
-        start_time = perf_counter()
+        
 
         ret, frame = cap.read()
-
+        start_time = perf_counter()
         try:
             face, frame = detect_face(frame, exec_net, input_blob, out_blob)
-            face , score = recognize_smile(face, exec_net2, input_blob2, out_blob2, frame, score)
+            face , flag = recognize_smile(face, exec_net2, input_blob2, out_blob2, frame)
+            score.update_score(flag)
+            frame = score.display_score(frame)
+
         except:
-            pass 
+            pass
+
         end_time = perf_counter()
-        log.info("score is  {} sec".format(score))
+        FPS_VALUE = int(1/(end_time-start_time))
+        cv2.putText(frame, str(FPS_VALUE) + ' FPS', (0,10), cv2.FONT_HERSHEY_SIMPLEX, 0.55, (0, 255, 0), 2)
+        #log.info("score is  {} sec".format(score))
 
 
         cv2.imshow('frame', frame)
