@@ -1,0 +1,331 @@
+<?xml version="1.0"?>
+<mapping>
+	<map>
+		<framework name="input" output_port_id="input" />
+		<IR name="input" output_port_id="0" />
+	</map>
+	<map>
+		<framework name="126/mean/Fused_Mul__copy" output_port_id="low_level_features.0.0.weight" />
+		<IR name="126/mean/Fused_Mul__copy" output_port_id="0" />
+	</map>
+	<map>
+		<framework name="126/variance/Fused_Add_" output_port_id="126" />
+		<IR name="126/variance/Fused_Add_" output_port_id="2" />
+	</map>
+	<map>
+		<framework name="127" output_port_id="127" />
+		<IR name="127" output_port_id="1" />
+	</map>
+	<map>
+		<framework name="129/mean/Fused_Mul__copy" output_port_id="low_level_features.1.0.weight" />
+		<IR name="129/mean/Fused_Mul__copy" output_port_id="0" />
+	</map>
+	<map>
+		<framework name="129/variance/Fused_Add_" output_port_id="129" />
+		<IR name="129/variance/Fused_Add_" output_port_id="2" />
+	</map>
+	<map>
+		<framework name="130" output_port_id="130" />
+		<IR name="130" output_port_id="1" />
+	</map>
+	<map>
+		<framework name="131" output_port_id="131" />
+		<IR name="131" output_port_id="1" />
+	</map>
+	<map>
+		<framework name="132" output_port_id="132" />
+		<IR name="132" output_port_id="2" />
+	</map>
+	<map>
+		<framework name="134/mean/Fused_Mul__copy" output_port_id="high_level_features.0.0.weight" />
+		<IR name="134/mean/Fused_Mul__copy" output_port_id="0" />
+	</map>
+	<map>
+		<framework name="134/variance/Fused_Add_" output_port_id="134" />
+		<IR name="134/variance/Fused_Add_" output_port_id="2" />
+	</map>
+	<map>
+		<framework name="135" output_port_id="135" />
+		<IR name="135" output_port_id="1" />
+	</map>
+	<map>
+		<framework name="137/mean/Fused_Mul__copy" output_port_id="high_level_features.0.3.weight" />
+		<IR name="137/mean/Fused_Mul__copy" output_port_id="0" />
+	</map>
+	<map>
+		<framework name="137/variance/Fused_Add_" output_port_id="137" />
+		<IR name="137/variance/Fused_Add_" output_port_id="2" />
+	</map>
+	<map>
+		<framework name="138" output_port_id="138" />
+		<IR name="138" output_port_id="1" />
+	</map>
+	<map>
+		<framework name="139" output_port_id="139" />
+		<IR name="139" output_port_id="1" />
+	</map>
+	<map>
+		<framework name="141/mean/Fused_Mul__copy" output_port_id="high_level_features.2.0.weight" />
+		<IR name="141/mean/Fused_Mul__copy" output_port_id="0" />
+	</map>
+	<map>
+		<framework name="141/variance/Fused_Add_" output_port_id="141" />
+		<IR name="141/variance/Fused_Add_" output_port_id="2" />
+	</map>
+	<map>
+		<framework name="142" output_port_id="142" />
+		<IR name="142" output_port_id="1" />
+	</map>
+	<map>
+		<framework name="144/mean/Fused_Mul__copy" output_port_id="high_level_features.2.3.weight" />
+		<IR name="144/mean/Fused_Mul__copy" output_port_id="0" />
+	</map>
+	<map>
+		<framework name="144/variance/Fused_Add_" output_port_id="144" />
+		<IR name="144/variance/Fused_Add_" output_port_id="2" />
+	</map>
+	<map>
+		<framework name="145" output_port_id="145" />
+		<IR name="145" output_port_id="1" />
+	</map>
+	<map>
+		<framework name="147/mean/Fused_Mul__copy" output_port_id="high_level_features.3.0.weight" />
+		<IR name="147/mean/Fused_Mul__copy" output_port_id="0" />
+	</map>
+	<map>
+		<framework name="147/variance/Fused_Add_" output_port_id="147" />
+		<IR name="147/variance/Fused_Add_" output_port_id="2" />
+	</map>
+	<map>
+		<framework name="148" output_port_id="148" />
+		<IR name="148" output_port_id="1" />
+	</map>
+	<map>
+		<framework name="150/mean/Fused_Mul__copy" output_port_id="high_level_features.3.3.weight" />
+		<IR name="150/mean/Fused_Mul__copy" output_port_id="0" />
+	</map>
+	<map>
+		<framework name="150/variance/Fused_Add_" output_port_id="150" />
+		<IR name="150/variance/Fused_Add_" output_port_id="2" />
+	</map>
+	<map>
+		<framework name="151" output_port_id="151" />
+		<IR name="151" output_port_id="1" />
+	</map>
+	<map>
+		<framework name="152" output_port_id="152" />
+		<IR name="152" output_port_id="1" />
+	</map>
+	<map>
+		<framework name="154/mean/Fused_Mul__copy" output_port_id="high_level_features.5.0.weight" />
+		<IR name="154/mean/Fused_Mul__copy" output_port_id="0" />
+	</map>
+	<map>
+		<framework name="154/variance/Fused_Add_" output_port_id="154" />
+		<IR name="154/variance/Fused_Add_" output_port_id="2" />
+	</map>
+	<map>
+		<framework name="155" output_port_id="155" />
+		<IR name="155" output_port_id="1" />
+	</map>
+	<map>
+		<framework name="157/mean/Fused_Mul__copy" output_port_id="high_level_features.5.3.weight" />
+		<IR name="157/mean/Fused_Mul__copy" output_port_id="0" />
+	</map>
+	<map>
+		<framework name="157/variance/Fused_Add_" output_port_id="157" />
+		<IR name="157/variance/Fused_Add_" output_port_id="2" />
+	</map>
+	<map>
+		<framework name="158" output_port_id="158" />
+		<IR name="158" output_port_id="1" />
+	</map>
+	<map>
+		<framework name="160/mean/Fused_Mul__copy" output_port_id="high_level_features.6.0.weight" />
+		<IR name="160/mean/Fused_Mul__copy" output_port_id="0" />
+	</map>
+	<map>
+		<framework name="160/variance/Fused_Add_" output_port_id="160" />
+		<IR name="160/variance/Fused_Add_" output_port_id="2" />
+	</map>
+	<map>
+		<framework name="161" output_port_id="161" />
+		<IR name="161" output_port_id="1" />
+	</map>
+	<map>
+		<framework name="163/mean/Fused_Mul__copy" output_port_id="high_level_features.6.3.weight" />
+		<IR name="163/mean/Fused_Mul__copy" output_port_id="0" />
+	</map>
+	<map>
+		<framework name="163/variance/Fused_Add_" output_port_id="163" />
+		<IR name="163/variance/Fused_Add_" output_port_id="2" />
+	</map>
+	<map>
+		<framework name="164" output_port_id="164" />
+		<IR name="164" output_port_id="1" />
+	</map>
+	<map>
+		<framework name="165" output_port_id="165" />
+		<IR name="165" output_port_id="1" />
+	</map>
+	<map>
+		<framework name="167/mean/Fused_Mul__copy" output_port_id="high_level_features.8.0.weight" />
+		<IR name="167/mean/Fused_Mul__copy" output_port_id="0" />
+	</map>
+	<map>
+		<framework name="167/variance/Fused_Add_" output_port_id="167" />
+		<IR name="167/variance/Fused_Add_" output_port_id="2" />
+	</map>
+	<map>
+		<framework name="168" output_port_id="168" />
+		<IR name="168" output_port_id="1" />
+	</map>
+	<map>
+		<framework name="170/mean/Fused_Mul__copy" output_port_id="high_level_features.8.3.weight" />
+		<IR name="170/mean/Fused_Mul__copy" output_port_id="0" />
+	</map>
+	<map>
+		<framework name="170/variance/Fused_Add_" output_port_id="170" />
+		<IR name="170/variance/Fused_Add_" output_port_id="2" />
+	</map>
+	<map>
+		<framework name="171" output_port_id="171" />
+		<IR name="171" output_port_id="1" />
+	</map>
+	<map>
+		<framework name="173/mean/Fused_Mul__copy" output_port_id="high_level_features.9.0.weight" />
+		<IR name="173/mean/Fused_Mul__copy" output_port_id="0" />
+	</map>
+	<map>
+		<framework name="173/variance/Fused_Add_" output_port_id="173" />
+		<IR name="173/variance/Fused_Add_" output_port_id="2" />
+	</map>
+	<map>
+		<framework name="174" output_port_id="174" />
+		<IR name="174" output_port_id="1" />
+	</map>
+	<map>
+		<framework name="176/mean/Fused_Mul__copy" output_port_id="high_level_features.9.3.weight" />
+		<IR name="176/mean/Fused_Mul__copy" output_port_id="0" />
+	</map>
+	<map>
+		<framework name="176/variance/Fused_Add_" output_port_id="176" />
+		<IR name="176/variance/Fused_Add_" output_port_id="2" />
+	</map>
+	<map>
+		<framework name="177" output_port_id="177" />
+		<IR name="177" output_port_id="1" />
+	</map>
+	<map>
+		<framework name="178" output_port_id="178" />
+		<IR name="178" output_port_id="1" />
+	</map>
+	<map>
+		<framework name="180/mean/Fused_Mul__copy" output_port_id="high_level_features.11.0.weight" />
+		<IR name="180/mean/Fused_Mul__copy" output_port_id="0" />
+	</map>
+	<map>
+		<framework name="180/variance/Fused_Add_" output_port_id="180" />
+		<IR name="180/variance/Fused_Add_" output_port_id="2" />
+	</map>
+	<map>
+		<framework name="181" output_port_id="181" />
+		<IR name="181" output_port_id="1" />
+	</map>
+	<map>
+		<framework name="183/mean/Fused_Mul__copy" output_port_id="high_level_features.11.3.weight" />
+		<IR name="183/mean/Fused_Mul__copy" output_port_id="0" />
+	</map>
+	<map>
+		<framework name="183/variance/Fused_Add_" output_port_id="183" />
+		<IR name="183/variance/Fused_Add_" output_port_id="2" />
+	</map>
+	<map>
+		<framework name="184" output_port_id="184" />
+		<IR name="184" output_port_id="1" />
+	</map>
+	<map>
+		<framework name="186/mean/Fused_Mul__copy" output_port_id="high_level_features.12.0.weight" />
+		<IR name="186/mean/Fused_Mul__copy" output_port_id="0" />
+	</map>
+	<map>
+		<framework name="186/variance/Fused_Add_" output_port_id="186" />
+		<IR name="186/variance/Fused_Add_" output_port_id="2" />
+	</map>
+	<map>
+		<framework name="187" output_port_id="187" />
+		<IR name="187" output_port_id="1" />
+	</map>
+	<map>
+		<framework name="189/mean/Fused_Mul__copy" output_port_id="high_level_features.12.3.weight" />
+		<IR name="189/mean/Fused_Mul__copy" output_port_id="0" />
+	</map>
+	<map>
+		<framework name="189/variance/Fused_Add_" output_port_id="189" />
+		<IR name="189/variance/Fused_Add_" output_port_id="2" />
+	</map>
+	<map>
+		<framework name="190" output_port_id="190" />
+		<IR name="190" output_port_id="1" />
+	</map>
+	<map>
+		<framework name="191" output_port_id="191" />
+		<IR name="191" output_port_id="1" />
+	</map>
+	<map>
+		<framework name="high_level_features.14.weight" output_port_id="high_level_features.14.weight" />
+		<IR name="high_level_features.14.weight" output_port_id="0" />
+	</map>
+	<map>
+		<framework name="193/reduce" output_port_id="193" />
+		<IR name="193/reduce" output_port_id="2" />
+	</map>
+	<map>
+		<framework name="195" output_port_id="195" />
+		<IR name="195" output_port_id="1" />
+	</map>
+	<map>
+		<framework name="194" output_port_id="194" />
+		<IR name="194" output_port_id="0" />
+	</map>
+	<map>
+		<framework name="196230" output_port_id="196" />
+		<IR name="196230" output_port_id="3" />
+	</map>
+	<map>
+		<framework name="198/Unsqueeze" output_port_id="198" />
+		<IR name="198/Unsqueeze" output_port_id="2" />
+	</map>
+	<map>
+		<framework name="199/Unsqueeze" output_port_id="199" />
+		<IR name="199/Unsqueeze" output_port_id="0" />
+	</map>
+	<map>
+		<framework name="200" output_port_id="200" />
+		<IR name="200" output_port_id="2" />
+	</map>
+	<map>
+		<framework name="201" output_port_id="201" />
+		<IR name="201" output_port_id="2" />
+	</map>
+	<map>
+		<framework name="202" output_port_id="202" />
+		<IR name="202" output_port_id="1" />
+	</map>
+	<map>
+		<framework name="classifier.2.weight" output_port_id="classifier.2.weight" />
+		<IR name="classifier.2.weight" output_port_id="0" />
+	</map>
+	<map>
+		<framework name="classifier.2.bias" output_port_id="classifier.2.bias" />
+		<IR name="classifier.2.bias" output_port_id="0" />
+	</map>
+	<map>
+		<framework name="203" output_port_id="203" />
+		<IR name="203" output_port_id="2" />
+	</map>
+	<map>
+		<framework name="output" output_port_id="output" />
+		<IR name="output" output_port_id="2" />
+	</map>
+</mapping>
