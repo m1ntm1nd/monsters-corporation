@@ -3,9 +3,54 @@ import cv2
 import numpy as np
 import argparse
 import logging as log
+
+import sounddevice as sd
+import queue
+
 from openvino.inference_engine import IECore
 
 from time import perf_counter
+
+audio = queue.Queue()
+
+def audio_callback(indata, frames, time, status):
+    if status:
+        print(status, file=sys.stderr)
+    audio.put(indata.copy())
+
+def prepare_audio_input(samplerate, channels):
+    sd.default.samplerate = samplerate
+    sd.default.channels = channels
+    sd.default.blocksize = 2
+
+def chunks(batch_size, channels, length):
+    chunk = np.zeros((batch_size, channels, length),dtype=np.float32)
+    n = 0
+    while n < batch_size:
+        data = audio.get()
+        for i in range(7999):
+            example = audio.get()
+            data = np.concatenate((data, example))
+        #data = (data - np.mean(data)) / (np.std(data) + 1e-15)
+        data = data.T
+        chunk[n, :, :] = data[:, :]
+        n += 1
+    yield chunk
+
+def detect_laugh(exec_net, input_blob, output_blob, batch_size, channels, length, input_shape):
+    result = -1
+    for idx, chunk in enumerate(chunks(batch_size, channels, length)):
+        chunk.shape = input_shape
+        output = exec_net.infer(inputs={input_blob: chunk})
+        output = output[output_blob]
+        for batch, data in enumerate(output):
+            label = np.argmax(data)
+            if data[label] > 0.8:
+                result = label
+    if result == 26:
+        return True
+    else:
+        return False
 
 INPUT_HEIGHT, INPUT_WIDTH = 384, 672
 
@@ -149,24 +194,49 @@ def main():
     exec_net2 = ie.load_network(network=net2, device_name="CPU")
     out_blob2 = next(iter(net2.outputs))
     input_blob2 = next(iter(net2.inputs))
+
+#sound
+    name_sound_model = "aclnet/FP16/aclnet.xml"
+    net3 = ie.read_network(name_sound_model, name_sound_model[:-4] + ".bin")
+    exec_net3 = ie.load_network(network=net3, device_name="GPU")
+    input_blob3 = next(iter(net3.input_info))
+    input_shape3 = net3.input_info[input_blob3].input_data.shape
+    output_blob3 = next(iter(net3.outputs))
+
+    """ labels = []
+    with open("aclnet_53cl.txt", "r") as file:
+        labels = [line.rstrip() for line in file.readlines()] """
+
+    batch_size, channels, one, length = input_shape3
+    samlerate = 16000
+    prepare_audio_input(samlerate, channels)
+
     score = 0
     while True:
-        start_time = perf_counter()
+        stream = sd.InputStream(callback=audio_callback)
+        with stream:
 
-        ret, frame = cap.read()
+            start_time = perf_counter()
 
-        try:
-            face, frame = detect_face(frame, exec_net, input_blob, out_blob)
-            face , score = recognize_smile(face, exec_net2, input_blob2, out_blob2, frame, score)
-        except:
-            pass 
-        end_time = perf_counter()
-        log.info("score is  {} sec".format(score))
+            ret, frame = cap.read()
+
+            try:
+                face, frame = detect_face(frame, exec_net, input_blob, out_blob)
+                face , score = recognize_smile(face, exec_net2, input_blob2, out_blob2, frame, score)
+                #print(audio.qsize())
+                if audio.qsize() >= 8000:
+                    res = detect_laugh(exec_net3, input_blob3, output_blob3, batch_size, channels, length, input_shape3)
+                    if res:
+                        cv2.putText(frame, "Laugh!", (100, 50), cv2.FONT_HERSHEY_SIMPLEX, 1, (0, 0, 255)) 
+            except:
+                pass 
+            end_time = perf_counter()
+            log.info("score is  {} sec".format(score))
 
 
-        cv2.imshow('frame', frame)
-        if cv2.waitKey(1) & 0xFF == ord('q'):
-            break
+            cv2.imshow('frame', frame)
+            if cv2.waitKey(1) & 0xFF == ord('q'):
+                break
 
 if __name__ == "__main__":
     sys.exit(main() or 0)
