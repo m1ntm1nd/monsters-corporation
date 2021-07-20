@@ -21,17 +21,13 @@ def audio_callback(indata, frames, time, status):
 def prepare_audio_input(samplerate, channels):
     sd.default.samplerate = samplerate
     sd.default.channels = channels
-    sd.default.blocksize = 2
+    sd.default.blocksize = 16000
 
 def chunks(batch_size, channels, length):
     chunk = np.zeros((batch_size, channels, length),dtype=np.float32)
     n = 0
     while n < batch_size:
         data = audio.get()
-        for i in range(7999):
-            example = audio.get()
-            data = np.concatenate((data, example))
-        #data = (data - np.mean(data)) / (np.std(data) + 1e-15)
         data = data.T
         chunk[n, :, :] = data[:, :]
         n += 1
@@ -167,7 +163,7 @@ def main():
 
     name_sound_model = "aclnet/FP16/aclnet.xml"
     net3 = ie.read_network(name_sound_model, name_sound_model[:-4] + ".bin")
-    exec_net3 = ie.load_network(network=net3, device_name="CPU")
+    exec_net3 = ie.load_network(network=net3, device_name="GPU")
     input_blob3 = next(iter(net3.input_info))
     input_shape3 = net3.input_info[input_blob3].input_data.shape
     output_blob3 = next(iter(net3.outputs))
@@ -182,9 +178,8 @@ def main():
 
     score = Score()
 
-    while True:
- 
-        with sd.InputStream(callback=audio_callback):
+    with sd.InputStream(callback=audio_callback):
+        while True:
 
             ret, frame = cap.read()
             start_time = perf_counter()
@@ -194,7 +189,7 @@ def main():
                 
                 frame = score.update_score(flag, frame)
                 log.info(audio.qsize())
-                if audio.qsize() >= 8000:
+                if audio.qsize() >= 1:
                     
                     res = detect_laugh(exec_net3, input_blob3, output_blob3, batch_size, channels, length, input_shape3)
                     log.info(res)
