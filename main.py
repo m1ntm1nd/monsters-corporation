@@ -45,7 +45,7 @@ def detect_laugh(exec_net, input_blob, output_blob, batch_size, channels, length
         output = output[output_blob]
         for batch, data in enumerate(output):
             label = np.argmax(data)
-            log.warn(label)
+            #log.warn(label)
             if data[label] > 0.8:
                 result = label
     if result == 26:
@@ -124,14 +124,14 @@ class Score:
         if flag:
             self.happy += 2
             self.neutral -= 1
-            #log.warn("Happiness score is {}".format(self.happy))
-            #log.warn("Neutral score is {}".format(self.neutral))
+            log.warn("Happiness score is {}".format(self.happy))
+            log.warn("Neutral score is {}".format(self.neutral))
         else:
 
             self.neutral += 1
             self.happy -= 1
-            #log.warn("Happiness score is {}".format(self.happy))
-            #log.warn("Neutral score is {}".format(self.neutral))
+            log.warn("Happiness score is {}".format(self.happy))
+            log.warn("Neutral score is {}".format(self.neutral))
 
         self._check_score()
         return self._display_score(frame)
@@ -193,11 +193,11 @@ def main():
                 flag = recognize_smile(face, exec_net2, input_blob2, out_blob2)
                 
                 frame = score.update_score(flag, frame)
-                log.info(audio.qsize())
+                #log.info(audio.qsize())
                 if audio.qsize() >= 8000:
                     
                     res = detect_laugh(exec_net3, input_blob3, output_blob3, batch_size, channels, length, input_shape3)
-                    log.info(res)
+                    #log.info(res)
                     if res:
                         log.info("Laugh!")
                         #zcv2.putText(frame, , (100, 50), cv2.FONT_HERSHEY_SIMPLEX, 1, (0, 0, 255))
