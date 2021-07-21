@@ -120,10 +120,14 @@ class Interface:
         
         self._main_window[50 : 650, 50 : 650] = meme
         self._main_window[50 : 650, 700 : 1300] = face
-        if self.score < 1250:
+        if self.score <= 2500:
             self._main_window[700:750, 50: 50 + self.score // 2, 0] = 0
             self._main_window[700:750, 50: 50 + self.score // 2, 1] = 255
             self._main_window[700:750, 50: 50 + self.score // 2, 2] = 0
+        else:
+            self._main_window[700:750, 50: 1300, 0] = 0
+            self._main_window[700:750, 50: 1300, 1] = 255
+            self._main_window[700:750, 50: 1300, 2] = 0
 
         return self._main_window
     
@@ -133,7 +137,19 @@ class Interface:
         if is_laugh:
             self.score += 25
     
-    #def good_finish():
+    def show_results(self):
+        image = []
+        if self.score <= 0:
+            image = cv2.imread("images/bad_finish.jpg")
+        elif self.score < 1250:
+            image = cv2.imread("images/bellow_average_finish.jpg")
+        elif self.score >= 1250:
+            image = cv2.imread("images/under_average_finish.jpg")
+        elif self.score >= 2500:
+            image = cv2.imread("images/good_finish.jpg")
+        image = cv2.resize(image, (650, 650))
+        self._main_window[0 : 650, 350 : 1000] = image
+        return self._main_window
 
 
 def main():
@@ -172,16 +188,21 @@ def main():
     with sd.InputStream(callback=audio_callback):
         interface = Interface()
         is_quit = False
+        FPS_VALUE = 0
         for meme_file in memes_dir:
             meme = cv2.imread(meme_file.as_posix())
 
             start_meme_time = perf_counter()
-        
+            counter = 0
+            start_time = 0
+            end_time = 0
             while True:
                 is_laughing = False
-                is_smiling = False
+                is_happy = False
                 ret, frame = cap.read()
-                start_time = perf_counter()
+                
+                if counter == 0:
+                    start_time = perf_counter()
                 try:
                     face, frame = detect_face(frame, exec_net, input_blob, out_blob)
                     is_happy = recognize_smile(face, exec_net2, input_blob2, out_blob2)
@@ -194,10 +215,13 @@ def main():
                     interface.update_score(is_happy, is_laughing)
                 except:
                     pass
-
-                end_time = perf_counter()
-                FPS_VALUE = int(1/(end_time-start_time))
-                cv2.putText(frame, str(FPS_VALUE) + ' FPS', (0,10), cv2.FONT_HERSHEY_SIMPLEX, 0.55, (0, 255, 0), 2)
+                
+                counter += 1
+                if counter == 10:
+                    end_time = perf_counter()
+                    FPS_VALUE = int((counter - 1)/(end_time-start_time))
+                    counter = 0
+                cv2.putText(frame, str(FPS_VALUE) + ' FPS', (10, 20), cv2.FONT_HERSHEY_SIMPLEX, 0.55, (0, 255, 0), 2)
 
                 cv2.imshow('OH THAT IS GAME', interface.draw_window(meme, frame, 0))
                 meme_time = end_time - start_meme_time
@@ -207,10 +231,25 @@ def main():
                     break
                 elif key == ord('n'):
                     break
+                if interface.score >= 2500:
+                    cv2.imshow('OH THAT IS GAME', interface.show_results())
+                    is_correct = False
+                    while not is_correct:
+                        key = cv2.waitKey()
+                        if key == ord('y'):
+                            is_correct = True
+                            interface = Interface()
+                            cap.read()
+                        if key == ord('q'):
+                            is_correct = True
+                            is_quit = True
+                if is_quit:
+                    break
             if is_quit:
                 break
-
-
+        if not is_quit:
+            cv2.imshow('OH THAT IS GAME', interface.show_results())
+            cv2.waitKey()
 
 if __name__ == "__main__":
     sys.exit(main() or 0)
