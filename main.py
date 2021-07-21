@@ -219,7 +219,7 @@ def main():
                 counter += 1
                 if counter == 10:
                     end_time = perf_counter()
-                    FPS_VALUE = int((counter - 1)/(end_time-start_time))
+                    FPS_VALUE = int((counter + 1)/(end_time-start_time))
                     counter = 0
                 cv2.putText(frame, str(FPS_VALUE) + ' FPS', (10, 20), cv2.FONT_HERSHEY_SIMPLEX, 0.55, (0, 255, 0), 2)
 
