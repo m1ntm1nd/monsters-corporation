@@ -3,6 +3,7 @@ import cv2
 import numpy as np
 import argparse
 import logging as log
+from pathlib import Path
 
 import sounddevice as sd
 import queue
@@ -89,60 +90,54 @@ def recognize_smile(image, exec_net, input_blob, out_blob):
     output = exec_net.infer(inputs={input_blob : input})
 
     #emotions = ['neutral', 'happy', 'sad', 'surprise', 'anger']
-    flag = 0
+    flag = False
 
     if np.argmax(output[out_blob]) == 1:
-        flag = 1
+        flag = True
 
     return flag
 
 
-class Score:
-    def __init__(self):
-        self.happy = 0
-        self.neutral = 0
-    
-    def _display_score(self, frame):
-        BAR_WIDTH = 30
-        PADDING = 1
-        line_width = -1
-        color = (0, 0, 255)
-        color2 = (0, 255, 0)
-        point1, point2 = (INPUT_WIDTH-BAR_WIDTH, (INPUT_HEIGHT-self.neutral)), (INPUT_WIDTH-PADDING, INPUT_HEIGHT)
-        point3, point4 = (INPUT_WIDTH-2*BAR_WIDTH, (INPUT_HEIGHT-self.happy)), (INPUT_WIDTH-PADDING-BAR_WIDTH, INPUT_HEIGHT)
         
-        cv2.rectangle(frame, point1, point2, color, line_width)
-        cv2.rectangle(frame, point3, point4, color2, line_width)
 
-        return frame
+    
 
-    def update_score(self, flag, frame):
-        if flag:
-            self.happy += 2
-            self.neutral -= 1
-            log.warn("Happiness score is {}".format(self.happy))
-            log.warn("Neutral score is {}".format(self.neutral))
-        else:
+def build_argparser():
+    parser = argparse.ArgumentParser(add_help=False)
+    parser.add_argument('-i', type=str, required=True, help="Required. Path to folder with images")
+    return parser.parse_args()
 
-            self.neutral += 1
-            self.happy -= 1
-            log.warn("Happiness score is {}".format(self.happy))
-            log.warn("Neutral score is {}".format(self.neutral))
+class Interface: 
 
-        self._check_score()
-        return self._display_score(frame)
+    def __init__(self):
+        self._main_window = cv2.resize(cv2.imread("Background.png"), (1350, 800))
+        cv2.rectangle(self._main_window, (50, 700), (1300, 750), (0, 0, 255), 5)
+        self.score = 0
+    
+    def draw_window(self, meme, face, score):
+        meme = cv2.resize(meme, (600, 600))
+        face = cv2.resize(face, (600, 600))
+        
+        self._main_window[50 : 650, 50 : 650] = meme
+        self._main_window[50 : 650, 700 : 1300] = face
+        if self.score < 1250:
+            self._main_window[700:750, 50: 50 + self.score // 2, 0] = 0
+            self._main_window[700:750, 50: 50 + self.score // 2, 1] = 255
+            self._main_window[700:750, 50: 50 + self.score // 2, 2] = 0
 
-    def _check_score(self):
-        if self.happy < 0:
-            self.happy = 0    
-        if self.neutral < 0:
-            self.neutral = 0
-        if self.happy > INPUT_HEIGHT:
-            self.happy = INPUT_HEIGHT
-        if self.neutral > INPUT_HEIGHT:
-            self.neutral = INPUT_HEIGHT
+        return self._main_window
+    
+    def update_score(self, is_happy, is_laugh):
+        if is_happy:
+            self.score += 1
+        if is_laugh:
+            self.score += 25
+    
+    #def good_finish():
+
 
 def main():
+    args = build_argparser()
     log.basicConfig(format="[ %(levelname)s ] %(message)s",
         level=log.INFO, stream=sys.stdout)
     
@@ -167,45 +162,52 @@ def main():
     input_blob3 = next(iter(net3.input_info))
     input_shape3 = net3.input_info[input_blob3].input_data.shape
     output_blob3 = next(iter(net3.outputs))
-
-    """ labels = []
-    with open("aclnet_53cl.txt", "r") as file:
-        labels = [line.rstrip() for line in file.readlines()] """
     
     batch_size, channels, one, length = input_shape3
     samlerate = 16000
     prepare_audio_input(samlerate, channels)
 
-    score = Score()
+    memes_dir = Path(args.i).iterdir()
 
     with sd.InputStream(callback=audio_callback):
-        while True:
+        interface = Interface()
+        is_quit = False
+        for meme_file in memes_dir:
+            meme = cv2.imread(meme_file.as_posix())
 
-            ret, frame = cap.read()
-            start_time = perf_counter()
-            try:
-                face, frame = detect_face(frame, exec_net, input_blob, out_blob)
-                flag = recognize_smile(face, exec_net2, input_blob2, out_blob2)
-                
-                frame = score.update_score(flag, frame)
-                if audio.qsize() >= 1:
-                #log.info(audio.qsize())
+            start_meme_time = perf_counter()
+        
+            while True:
+                is_laughing = False
+                is_smiling = False
+                ret, frame = cap.read()
+                start_time = perf_counter()
+                try:
+                    face, frame = detect_face(frame, exec_net, input_blob, out_blob)
+                    is_happy = recognize_smile(face, exec_net2, input_blob2, out_blob2)
                     
-                    res = detect_laugh(exec_net3, input_blob3, output_blob3, batch_size, channels, length, input_shape3)
-                    #log.info(res)
-                    if res:
-                        log.info("Laugh!")
-                        #zcv2.putText(frame, , (100, 50), cv2.FONT_HERSHEY_SIMPLEX, 1, (0, 0, 255))
-            except:
-                pass
+                    if audio.qsize() >= 1:
+                        
+                        is_laughing = detect_laugh(exec_net3, input_blob3, output_blob3, batch_size, channels, length, input_shape3)
+                        if is_laughing:
+                            log.info("Laugh!")
+                    interface.update_score(is_happy, is_laughing)
+                except:
+                    pass
 
-            end_time = perf_counter()
-            FPS_VALUE = int(1/(end_time-start_time))
-            cv2.putText(frame, str(FPS_VALUE) + ' FPS', (0,10), cv2.FONT_HERSHEY_SIMPLEX, 0.55, (0, 255, 0), 2)
-            #log.info("score is  {} sec".format(score))
+                end_time = perf_counter()
+                FPS_VALUE = int(1/(end_time-start_time))
+                cv2.putText(frame, str(FPS_VALUE) + ' FPS', (0,10), cv2.FONT_HERSHEY_SIMPLEX, 0.55, (0, 255, 0), 2)
 
-            cv2.imshow('OH THAT IS GAME', frame)
-            if cv2.waitKey(1) & 0xFF == ord('q'):
+                cv2.imshow('OH THAT IS GAME', interface.draw_window(meme, frame, 0))
+                meme_time = end_time - start_meme_time
+                key = cv2.waitKey(1)
+                if key == ord('q'):
+                    is_quit = True
+                    break
+                elif key == ord('n'):
+                    break
+            if is_quit:
                 break
 
 
