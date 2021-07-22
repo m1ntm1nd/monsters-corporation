@@ -39,11 +39,16 @@ def main():
 
     image_queue = queue.Queue()
     is_over = False
+    lock = threading.Condition()
+    
 
     def read_camera():
         while not is_over:
             _, frame = cap.read()
+            lock.acquire()
             image_queue.put(frame)
+            lock.notify()
+            lock.release()
         return
 
     thread = threading.Thread(target=read_camera)
@@ -64,25 +69,31 @@ def main():
             end_time = 0
             while True:
                 is_happy = False
+                
+                if image_queue.empty():
+                    lock.acquire()
+                    lock.wait()
+                    lock.release()
+                
                 start_time = perf_counter()
-                if not image_queue.empty():
-                    frame = image_queue.get()
-                    is_happy = happy_detector.recognize_smile(frame)
+
+                frame = image_queue.get()
+                is_happy = happy_detector.recognize_smile(frame)
 
                 is_laughing = False
                 if not laugh_detector.is_empty():
                     is_laughing = laugh_detector.detect_laugh()
 
                 end_time = perf_counter()
-                TIME_SUM += end_time-start_time
-
-                interface.update_score(is_happy, is_laughing)
-                
+                TIME_SUM += end_time - start_time
                 counter += 1
                 if counter == 9:
                     FPS_VALUE = int((counter + 1) / TIME_SUM)
                     counter = 0
                     TIME_SUM = 0
+
+                interface.update_score(is_happy, is_laughing)
+                
                 cv2.putText(frame, str(FPS_VALUE) + ' FPS', (10, 20), cv2.FONT_HERSHEY_SIMPLEX, 0.55, (0, 255, 0), 2)
 
                 cv2.imshow('MemCheck', interface.draw_window(meme, frame, 0))
@@ -108,6 +119,7 @@ def main():
                             is_quit = True
                 if is_quit:
                     break
+                
             if is_quit:
                 break
         is_over = True
