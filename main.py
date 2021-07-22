@@ -5,49 +5,11 @@ import argparse
 import logging as log
 from pathlib import Path
 import sounddevice as sd
-import queue
 from openvino.inference_engine import IECore
 from time import perf_counter
 
 from src.interface import Interface
-
-audio = queue.Queue()
-
-def audio_callback(indata, frames, time, status):
-    if status:
-        print(status, file=sys.stderr)
-    audio.put(indata.copy())
-
-def prepare_audio_input(samplerate, channels):
-    sd.default.samplerate = samplerate
-    sd.default.channels = channels
-    sd.default.blocksize = 16000
-
-def chunks(batch_size, channels, length):
-    chunk = np.zeros((batch_size, channels, length),dtype=np.float32)
-    n = 0
-    while n < batch_size:
-        data = audio.get()
-        data = data.T
-        chunk[n, :, :] = data[:, :]
-        n += 1
-    yield chunk
-
-def detect_laugh(exec_net, input_blob, output_blob, batch_size, channels, length, input_shape):
-    result = -1
-    for idx, chunk in enumerate(chunks(batch_size, channels, length)):
-        chunk.shape = input_shape
-        output = exec_net.infer(inputs={input_blob: chunk})
-        output = output[output_blob]
-        for batch, data in enumerate(output):
-            label = np.argmax(data)
-            #log.warn(label)
-            if data[label] > 0.8:
-                result = label
-    if result == 26:
-        return True
-    else:
-        return False
+from src.laugh_detector import LaughDetector
 
 INPUT_HEIGHT, INPUT_WIDTH = 384, 672
 
@@ -122,20 +84,11 @@ def main():
     out_blob2 = next(iter(net2.outputs))
     input_blob2 = next(iter(net2.inputs))
 
-    name_sound_model = "aclnet/FP16/aclnet.xml"
-    net3 = ie.read_network(name_sound_model, name_sound_model[:-4] + ".bin")
-    exec_net3 = ie.load_network(network=net3, device_name="GPU")
-    input_blob3 = next(iter(net3.input_info))
-    input_shape3 = net3.input_info[input_blob3].input_data.shape
-    output_blob3 = next(iter(net3.outputs))
-    
-    batch_size, channels, one, length = input_shape3
-    samlerate = 16000
-    prepare_audio_input(samlerate, channels)
-
     memes_dir = Path(args.i).iterdir()
 
-    with sd.InputStream(callback=audio_callback):
+    laugh_detector = LaughDetector(ie)
+
+    with laugh_detector.start_record():
         interface = Interface()
         is_quit = False
         FPS_VALUE = 0
@@ -157,9 +110,8 @@ def main():
                     face, frame = detect_face(frame, exec_net, input_blob, out_blob)
                     is_happy = recognize_smile(face, exec_net2, input_blob2, out_blob2)
                     
-                    if audio.qsize() >= 1:
-                        
-                        is_laughing = detect_laugh(exec_net3, input_blob3, output_blob3, batch_size, channels, length, input_shape3)
+                    if not laugh_detector.is_empty():
+                        is_laughing = laugh_detector.detect_laugh()
                         if is_laughing:
                             log.info("Laugh!")
                     interface.update_score(is_happy, is_laughing)
