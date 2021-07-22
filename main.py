@@ -7,6 +7,8 @@ from pathlib import Path
 import sounddevice as sd
 from openvino.inference_engine import IECore
 from time import perf_counter
+import queue
+import threading
 
 from src.interface import Interface
 from src.laugh_detector import LaughDetector
@@ -35,12 +37,25 @@ def main():
     happy_detector = HappyDetector(ie)
     laugh_detector = LaughDetector(ie)
 
+    image_queue = queue.Queue()
+    is_over = False
+
+    def read_camera():
+        while not is_over:
+            _, frame = cap.read()
+            image_queue.put(frame)
+        return
+
+    thread = threading.Thread(target=read_camera)
+
     with laugh_detector.start_record():
         interface = Interface(imgs_count)
         is_quit = False
         is_good = False
         FPS_VALUE = 0
         TIME_SUM = 0
+        _, frame = cap.read()
+        thread.start()
         for meme_file in memes_dir:
             meme = cv2.imread(meme_file.as_posix())
 
@@ -48,14 +63,13 @@ def main():
             start_time = 0
             end_time = 0
             while True:
-                is_laughing = False
                 is_happy = False
-                _, frame = cap.read()
-                
                 start_time = perf_counter()
+                if not image_queue.empty():
+                    frame = image_queue.get()
+                    is_happy = happy_detector.recognize_smile(frame)
 
-                is_happy = happy_detector.recognize_smile(frame)
-                
+                is_laughing = False
                 if not laugh_detector.is_empty():
                     is_laughing = laugh_detector.detect_laugh()
 
@@ -66,7 +80,6 @@ def main():
                 
                 counter += 1
                 if counter == 9:
-                    end_time = perf_counter()
                     FPS_VALUE = int((counter + 1) / TIME_SUM)
                     counter = 0
                     TIME_SUM = 0
@@ -97,6 +110,8 @@ def main():
                     break
             if is_quit:
                 break
+        is_over = True
+        thread.join()
         if not is_quit and not is_good:
             cv2.imshow('MemCheck', interface.show_results())
             cv2.waitKey()
