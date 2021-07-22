@@ -22,12 +22,11 @@ class HappyDetector:
 
         
 
-    def detect_face(self, image):
+    def _detect_face(self, image):
         image = cv2.resize(image, (self._fd_w, self._fd_h))
-        input = image.copy()
-        res = image.copy()
+        face = []
 
-        input = input.transpose(2, 0, 1)
+        input = image.transpose(2, 0, 1)
 
         output = self._fd_exec_net.infer(inputs={self._fd_input_blob : input})
 
@@ -35,31 +34,26 @@ class HappyDetector:
         output = np.squeeze(output)
 
         threshold = 0.5
-        flag = 0
 
         for detection in output:
             confidence = detection[2]        
             if  confidence > threshold:
                 xmin, ymin, xmax, ymax = (int(detection[3]*self._fd_w), int(detection[4]*self._fd_h), 
                     int(detection[5]*self._fd_w), int(detection[6]*self._fd_h))
-                res = res[ymin:ymax+1, xmin:xmax+1]
-
-            if flag > 5:
-                break
+                face = image[ymin:ymax+1, xmin:xmax+1]
         
-        return res, image
+        return face
 
     def recognize_smile(self, image):
-        input = cv2.resize(image, (64, 64))
-        input = input.transpose(2, 0, 1)
+        face = self._detect_face(image)
         
-        output = self._er_exec_net.infer(inputs={self._er_input_blob : input})
+        face = cv2.resize(face, (self._er_w, self._er_h))
+        face = face.transpose(2, 0, 1)
+        
+        output = self._er_exec_net.infer(inputs={self._er_input_blob : face})
 
-        #emotions = ['neutral', 'happy', 'sad', 'surprise', 'anger']
-        flag = False
-
-        if np.argmax(output[out_blob]) == 1:
-            flag = True
-
-        return flag
+        # emotions = ['neutral', 'happy', 'sad', 'surprise', 'anger']
+        if np.argmax(output[self._er_out_blob]) == 1:
+            return True
+        return False
     

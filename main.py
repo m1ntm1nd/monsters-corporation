@@ -41,28 +41,24 @@ def main():
         for meme_file in memes_dir:
             meme = cv2.imread(meme_file.as_posix())
 
-            start_meme_time = perf_counter()
             counter = 0
             start_time = 0
             end_time = 0
             while True:
                 is_laughing = False
                 is_happy = False
-                ret, frame = cap.read()
+                _, frame = cap.read()
                 
                 if counter == 0:
                     start_time = perf_counter()
-                try:
-                    face, frame = happy_detector.detect_face(frame)
-                    is_happy = happy_detector.recognize_smile(face)
-                    
-                    if not laugh_detector.is_empty():
-                        is_laughing = laugh_detector.detect_laugh()
-                        if is_laughing:
-                            log.info("Laugh!")
-                    interface.update_score(is_happy, is_laughing)
-                except:
-                    pass
+
+                is_happy = happy_detector.recognize_smile(frame)
+                
+                if not laugh_detector.is_empty():
+                    is_laughing = laugh_detector.detect_laugh()
+                    if is_laughing:
+                        log.info("Laugh!")
+                interface.update_score(is_happy, is_laughing)
                 
                 counter += 1
                 if counter == 10:
@@ -72,7 +68,6 @@ def main():
                 cv2.putText(frame, str(FPS_VALUE) + ' FPS', (10, 20), cv2.FONT_HERSHEY_SIMPLEX, 0.55, (0, 255, 0), 2)
 
                 cv2.imshow('OH THAT IS GAME', interface.draw_window(meme, frame, 0))
-                meme_time = end_time - start_meme_time
                 key = cv2.waitKey(1)
                 if key == ord('q'):
                     is_quit = True
