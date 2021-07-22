@@ -69,7 +69,7 @@ def main():
                     counter = 0
                 cv2.putText(frame, str(FPS_VALUE) + ' FPS', (10, 20), cv2.FONT_HERSHEY_SIMPLEX, 0.55, (0, 255, 0), 2)
 
-                cv2.imshow('OH THAT IS GAME', interface.draw_window(meme, frame, 0))
+                cv2.imshow('MemCheck', interface.draw_window(meme, frame, 0))
                 key = cv2.waitKey(1)
                 if key == ord('q'):
                     is_quit = True
@@ -77,7 +77,7 @@ def main():
                 elif key == ord('n'):
                     break
                 if interface.score >= interface.max_score and not is_good:
-                    cv2.imshow('OH THAT IS GAME', interface.show_results())
+                    cv2.imshow('MemCheck', interface.show_results())
                     is_correct = False
                     is_good = True
                     while not is_correct:
@@ -95,7 +95,7 @@ def main():
             if is_quit:
                 break
         if not is_quit and not is_good:
-            cv2.imshow('OH THAT IS GAME', interface.show_results())
+            cv2.imshow('MemCheck', interface.show_results())
             cv2.waitKey()
 
 if __name__ == "__main__":
