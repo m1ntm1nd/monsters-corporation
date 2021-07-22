@@ -47,7 +47,7 @@ class HappyDetector:
     def recognize_smile(self, image):
         face = self._detect_face(image)
         
-        if len(face) == 0:
+        if len(face) == 0 or face.size == 0:
             return False
         
         face = cv2.resize(face, (self._er_w, self._er_h))
