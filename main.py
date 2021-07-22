@@ -28,15 +28,17 @@ def main():
     cap = cv2.VideoCapture(0)
 
     ie = IECore()
-
-    memes_dir = Path(args.i).iterdir()
-
+    
+    input_path = Path(args.i)
+    memes_dir = input_path.iterdir()
+    imgs_count = len(list(input_path.glob('*')))
     happy_detector = HappyDetector(ie)
     laugh_detector = LaughDetector(ie)
 
     with laugh_detector.start_record():
-        interface = Interface()
+        interface = Interface(imgs_count)
         is_quit = False
+        is_good = False
         FPS_VALUE = 0
         for meme_file in memes_dir:
             meme = cv2.imread(meme_file.as_posix())
@@ -74,14 +76,16 @@ def main():
                     break
                 elif key == ord('n'):
                     break
-                if interface.score >= 2500:
+                if interface.score >= interface.max_score and not is_good:
                     cv2.imshow('OH THAT IS GAME', interface.show_results())
                     is_correct = False
+                    is_good = True
                     while not is_correct:
                         key = cv2.waitKey()
                         if key == ord('y'):
                             is_correct = True
-                            interface = Interface()
+                            interface = Interface(imgs_count)
+                            interface.fill_line()
                             cap.read()
                         if key == ord('q'):
                             is_correct = True
@@ -90,7 +94,7 @@ def main():
                     break
             if is_quit:
                 break
-        if not is_quit:
+        if not is_quit and not is_good:
             cv2.imshow('OH THAT IS GAME', interface.show_results())
             cv2.waitKey()
 
