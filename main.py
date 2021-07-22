@@ -40,6 +40,7 @@ def main():
         is_quit = False
         is_good = False
         FPS_VALUE = 0
+        TIME_SUM = 0
         for meme_file in memes_dir:
             meme = cv2.imread(meme_file.as_posix())
 
@@ -51,22 +52,24 @@ def main():
                 is_happy = False
                 _, frame = cap.read()
                 
-                if counter == 0:
-                    start_time = perf_counter()
+                start_time = perf_counter()
 
                 is_happy = happy_detector.recognize_smile(frame)
                 
                 if not laugh_detector.is_empty():
                     is_laughing = laugh_detector.detect_laugh()
-                    if is_laughing:
-                        log.info("Laugh!")
+
+                end_time = perf_counter()
+                TIME_SUM += end_time-start_time
+
                 interface.update_score(is_happy, is_laughing)
                 
                 counter += 1
-                if counter == 10:
+                if counter == 9:
                     end_time = perf_counter()
-                    FPS_VALUE = int((counter + 1)/(end_time-start_time))
+                    FPS_VALUE = int((counter + 1) / TIME_SUM)
                     counter = 0
+                    TIME_SUM = 0
                 cv2.putText(frame, str(FPS_VALUE) + ' FPS', (10, 20), cv2.FONT_HERSHEY_SIMPLEX, 0.55, (0, 255, 0), 2)
 
                 cv2.imshow('MemCheck', interface.draw_window(meme, frame, 0))
