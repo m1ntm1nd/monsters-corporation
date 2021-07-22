@@ -41,3 +41,5 @@ python main.py -i test-memes
 - [aclnet](https://docs.openvinotoolkit.org/2021.1/omz_models_public_aclnet_aclnet.html) - для распознавания смеха по звуку
 - [face-detection-adas-0001](https://docs.openvinotoolkit.org/2021.2/omz_models_intel_face_detection_adas_0001_description_face_detection_adas_0001.html) - сеть для детектирования лица
 - [emotions-recognition-retail-0003](https://docs.openvinotoolkit.org/latest/omz_models_model_emotions_recognition_retail_0003.html) - классификационная модель для распознания улыбки на лице
+
+## Демо
