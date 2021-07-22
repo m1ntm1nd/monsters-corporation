@@ -4,7 +4,7 @@ import numpy as np
 class HappyDetector:
     def __init__(self, ie):
         # face detection net load
-        self._fd_net = ie.read_network(model="face-detection-adas-0001/FP16-INT8/face-detection-adas-0001.xml")
+        self._fd_net = ie.read_network(model="models/face-detection-adas-0001/FP16-INT8/face-detection-adas-0001.xml")
         self._fd_exec_net = ie.load_network(network=self._fd_net, device_name="CPU")
         self._fd_out_blob = next(iter(self._fd_net.outputs))
         self._fd_input_blob = next(iter(self._fd_net.inputs))
@@ -13,7 +13,7 @@ class HappyDetector:
         _, _, self._fd_h, self._fd_w = self._fd_net.input_info[self._fd_input_blob].input_data.shape
 
         # emotions recognition net load
-        self._er_net = ie.read_network(model="emotions-recognition-retail-0003/FP16-INT8/emotions-recognition-retail-0003.xml")
+        self._er_net = ie.read_network(model="models/emotions-recognition-retail-0003/FP16-INT8/emotions-recognition-retail-0003.xml")
         self._er_exec_net = ie.load_network(network=self._er_net, device_name="CPU")
         self._er_out_blob = next(iter(self._er_net.outputs))
         self._er_input_blob = next(iter(self._er_net.inputs))
@@ -46,6 +46,9 @@ class HappyDetector:
 
     def recognize_smile(self, image):
         face = self._detect_face(image)
+        
+        if len(face) == 0:
+            return False
         
         face = cv2.resize(face, (self._er_w, self._er_h))
         face = face.transpose(2, 0, 1)

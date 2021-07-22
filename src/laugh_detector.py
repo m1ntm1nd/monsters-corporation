@@ -7,7 +7,7 @@ from openvino.inference_engine import IECore
 class LaughDetector:
     def __init__(self, ie):
         self._audio = queue.Queue()
-        self._name_sound_model = "aclnet/FP16/aclnet.xml"
+        self._name_sound_model = "models/aclnet/FP16/aclnet.xml"
         self._net = ie.read_network(self._name_sound_model, self._name_sound_model[:-4] + ".bin")
         self._exec_net = ie.load_network(network=self._net, device_name="GPU")
         self._input_blob = next(iter(self._net.input_info))
