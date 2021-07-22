@@ -4,7 +4,7 @@ import numpy as np
 class Interface: 
 
     def __init__(self):
-        self._main_window = cv2.resize(cv2.imread("Background.png"), (1350, 800))
+        self._main_window = cv2.resize(cv2.imread("images/Background.png"), (1350, 800))
         cv2.rectangle(self._main_window, (50, 700), (1300, 750), (0, 0, 255), 5)
         self.score = 0
     
