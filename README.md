@@ -45,3 +45,5 @@ python main.py -i test-memes
 - [emotions-recognition-retail-0003](https://docs.openvinotoolkit.org/latest/omz_models_model_emotions_recognition_retail_0003.html) - классификационная модель для распознания улыбки на лице
 
 ## Демо
+
+![](presentation/demo.gif)
